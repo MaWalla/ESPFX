@@ -46,8 +46,10 @@ void CommonLEDs::_singleColor() {
 
 
 void CommonLEDs::_streamline() {
-  for(int i=0; i<NUM_LEDS; i++) {
-    leds[i].setRGB(
+  int offset = data["offset"].as<int>();
+  int currentLength = data["current_length"].as<int>();
+  for(int i=0; i<currentLength; i++) {
+    leds[i + offset].setRGB(
       data["led_list"][i][0].as<int>(),
       data["led_list"][i][1].as<int>(),
       data["led_list"][i][2].as<int>()
