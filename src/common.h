@@ -12,8 +12,12 @@ class CommonLEDs {
     void display(char (&buffer)[BUFFERSIZE]);
   private:
     void _singleColor(void);
+    void _gradient(void);
     void _streamline(void);
     void _random(void);
+    void _randomLeadColor(void);
+    void _randomLeadGradient(void);
+    void _off(void);
 };
 
 #endif
@@ -45,6 +49,11 @@ void CommonLEDs::_singleColor() {
 }
 
 
+void CommonLEDs::_gradient() {
+
+}
+
+
 void CommonLEDs::_streamline() {
   int offset = data["offset"].as<int>();
   int currentLength = data["current_length"].as<int>();
@@ -63,6 +72,20 @@ void CommonLEDs::_random() {
 }
 
 
+void CommonLEDs::_randomLeadColor() {
+
+}
+
+void CommonLEDs::_randomLeadGradient() {
+
+}
+
+void CommonLEDs::_off() {
+  for(int i=0; i<NUM_LEDS; i++) {
+    leds[i].setRGB(0, 0, 0);
+  }
+}
+
 void CommonLEDs::display(char (&buffer)[BUFFERSIZE]) {
   DeserializationError error = deserializeJson(data, buffer);
   if (error) {
@@ -78,5 +101,15 @@ void CommonLEDs::display(char (&buffer)[BUFFERSIZE]) {
     _singleColor();
   } else if(mode == "streamline") {
     _streamline(); 
+  } else if(mode == "random") {
+    _random(); 
+  } else if(mode == "off") {
+    _off(); 
+  } else if(mode == "gradient") {
+    _gradient(); 
+  } else if(mode == "randomLeadColor") {
+    _randomLeadColor(); 
+  } else if(mode == "randomLeadGradient") {
+    _randomLeadGradient(); 
   }
 }
