@@ -53,7 +53,7 @@ void loop() {
   udp.parsePacket();
   if(udp.read(buffer, BUFFERSIZE) > 0) {
     commonleds.display(buffer);
+    FastLED.show();
   }
   memset(buffer, 0, sizeof(buffer));
-  FastLED.show();
 }
