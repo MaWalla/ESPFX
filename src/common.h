@@ -11,12 +11,12 @@ class CommonLEDs {
     CommonLEDs();
     void display(char (&buffer)[BUFFERSIZE]);
   private:
-    void _singleColor(void);
-    void _gradient(void);
-    void _streamline(void);
-    void _random(void);
-    void _randomLeadColor(void);
-    void _randomLeadGradient(void);
+    void _singleColor(float brightness);
+    void _gradient(float brightness);
+    void _streamline(float brightness);
+    void _random(float brightness);
+    void _randomLeadColor(float brightness);
+    void _randomLeadGradient(float brightness);
     void _off(void);
 };
 
@@ -38,45 +38,45 @@ CommonLEDs::CommonLEDs() {
 
 
 
-void CommonLEDs::_singleColor() {
+void CommonLEDs::_singleColor(float brightness) {
   for(int i=0; i<NUM_LEDS; i++) {
     leds[i].setRGB(
-      data["input_color"][0].as<int>(),
-      data["input_color"][1].as<int>(),
-      data["input_color"][2].as<int>()
+      data["input_color"][0].as<int>() * brightness,
+      data["input_color"][1].as<int>() * brightness,
+      data["input_color"][2].as<int>() * brightness
     );
   }
 }
 
 
-void CommonLEDs::_gradient() {
+void CommonLEDs::_gradient(float brightness) {
 
 }
 
 
-void CommonLEDs::_streamline() {
+void CommonLEDs::_streamline(float brightness) {
   int offset = data["offset"].as<int>();
   int currentLength = data["current_length"].as<int>();
   for(int i=0; i<currentLength; i++) {
     leds[i + offset].setRGB(
-      data["led_list"][i][0].as<int>(),
-      data["led_list"][i][1].as<int>(),
-      data["led_list"][i][2].as<int>()
+      data["led_list"][i][0].as<float>() * brightness,
+      data["led_list"][i][1].as<float>() * brightness,
+      data["led_list"][i][2].as<float>() * brightness
     );
   }
 }
 
 
-void CommonLEDs::_random() {
+void CommonLEDs::_random(float brightness) {
 
 }
 
 
-void CommonLEDs::_randomLeadColor() {
+void CommonLEDs::_randomLeadColor(float brightness) {
 
 }
 
-void CommonLEDs::_randomLeadGradient() {
+void CommonLEDs::_randomLeadGradient(float brightness) {
 
 }
 
@@ -96,20 +96,30 @@ void CommonLEDs::display(char (&buffer)[BUFFERSIZE]) {
   }
 
   String mode = data["mode"].as<String>();
+  float brightness;
+
+  if(data.containsKey("brightness")) {
+    brightness = data["brightness"].as<float>();
+    if (brightness > 1) {
+      brightness = 1;
+    }
+  } else {
+    brightness = 1;
+  }
 
   if(mode == "single_color") {
-    _singleColor();
+    _singleColor(brightness);
   } else if(mode == "streamline") {
-    _streamline(); 
+    _streamline(brightness); 
   } else if(mode == "random") {
-    _random(); 
+    _random(brightness); 
   } else if(mode == "off") {
     _off(); 
   } else if(mode == "gradient") {
-    _gradient(); 
+    _gradient(brightness); 
   } else if(mode == "randomLeadColor") {
-    _randomLeadColor(); 
+    _randomLeadColor(brightness); 
   } else if(mode == "randomLeadGradient") {
-    _randomLeadGradient(); 
+    _randomLeadGradient(brightness); 
   }
 }
