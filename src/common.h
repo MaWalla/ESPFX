@@ -94,9 +94,14 @@ void CommonLEDs::_streamline(float brightness) {
 
 
 void CommonLEDs::_random(float brightness) {
-
+  for(int i=0; i<NUM_LEDS; i++) {
+    leds[i].setRGB(
+      random(32, 255) * brightness,
+      random(32, 255) * brightness,
+      random(32, 255) * brightness
+    );
+  }
 }
-
 
 void CommonLEDs::_randomLeadColor(float brightness) {
 
