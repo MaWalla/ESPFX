@@ -50,7 +50,33 @@ void CommonLEDs::_singleColor(float brightness) {
 
 
 void CommonLEDs::_gradient(float brightness) {
+  float r1 = data["input_color1"][0].as<float>() / NUM_LEDS;
+  float r2 = data["input_color2"][0].as<float>() / NUM_LEDS;
+  float g1 = data["input_color1"][1].as<float>() / NUM_LEDS;
+  float g2 = data["input_color2"][1].as<float>() / NUM_LEDS;
+  float b1 = data["input_color1"][2].as<float>() / NUM_LEDS;
+  float b2 = data["input_color2"][2].as<float>() / NUM_LEDS;
 
+  float steps1[NUM_LEDS][3];
+  float steps2[NUM_LEDS][3];
+
+  for(int i=0; i<NUM_LEDS; i++) {
+    steps1[i][0] = r1 * i;
+    steps1[i][1] = g1 * i;
+    steps1[i][2] = b1 * i;
+
+    steps2[NUM_LEDS - 1 - i][0] = r2 * i;
+    steps2[NUM_LEDS - 1 - i][1] = g2 * i;
+    steps2[NUM_LEDS - 1 - i][2] = b2 * i;
+  }
+
+  for(int i=0; i<NUM_LEDS; i++) {
+    leds[i].setRGB(
+      (steps1[i][0] * 2 + steps2[i][0] * 2) / 2 * brightness,
+      (steps1[i][1] * 2 + steps2[i][1] * 2) / 2 * brightness,
+      (steps1[i][2] * 2 + steps2[i][2] * 2) / 2 * brightness
+    );
+  }
 }
 
 
