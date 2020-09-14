@@ -57,7 +57,7 @@ void CommonLEDs::_generateGradient() {
 
 
 CommonLEDs::CommonLEDs() {
-  FastLED.addLeds<LED_CHIPSET, LEDPIN, LED_COLOR_ORDER>(leds, NUM_LEDS);
+  FastLED.addLeds<LED_CHIPSET, LEDPIN, LED_COLOR_ORDER>(leds, NUM_LEDS).setCorrection(TypicalLEDStrip);
 }
 
 
