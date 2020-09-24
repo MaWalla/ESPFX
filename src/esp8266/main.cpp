@@ -52,8 +52,10 @@ void setup() {
 void loop() {
   udp.parsePacket();
   if(udp.read(buffer, BUFFERSIZE) > 0) {
+    //int time = millis();
     commonleds.display(buffer);
     FastLED.show();
+    //Serial.println(millis() - time);
   }
   memset(buffer, 0, sizeof(buffer));
 }

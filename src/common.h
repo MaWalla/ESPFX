@@ -11,16 +11,18 @@ class CommonLEDs {
     CommonLEDs();
     void display(char (&buffer)[BUFFERSIZE]);
   private:
-    void _singleColor(float brightness);
-    void _gradient(float brightness);
-    void _streamline(float brightness);
-    void _random(float brightness);
-    void _randomLeadColor(float brightness);
-    void _randomLeadGradient(float brightness);
+    void _singleColor();
+    void _gradient();
+    void _streamline();
+    void _random();
+    void _randomLeadColor();
+    void _randomLeadGradient();
     void _off(void);
+    float _colorCorrection(int color, int index);
     //dirty but simple I guess
     void _generateGradient(void);
     float _generatedGradient[NUM_LEDS][3];
+    float _brightness;
 };
 
 #endif
@@ -33,6 +35,35 @@ class CommonLEDs {
 
 StaticJsonDocument<16384> data;
 CRGB leds[NUM_LEDS];
+
+
+float CommonLEDs::_colorCorrection(int color, int index) {
+  float output;
+  // the functions using pow and sqrt take about 20ms per full draw cycle
+  // this is too much and the simplified multiplication should do
+  // also it it optimized towards my WS2811 LEDs and gives a
+  // slight reddish/warm tint on low brightness, no big deal though
+  switch(index) {
+    case 0:
+      // red
+      output = color * _brightness;
+      break;
+    case 1:
+      // green
+      // (pow(sqrt(color), 1.825) + (color / 100))
+      output = color * .55 * _brightness;
+      break;
+    case 2:
+      // blue
+      // (pow(sqrt(color), 1.775) + (color / 100))
+      output = color * .45 * _brightness;
+      break;
+    default:
+      output = 0;
+  }
+
+  return output;
+}
 
 
 float randomLead(float input) {
@@ -57,76 +88,76 @@ void CommonLEDs::_generateGradient() {
 
 
 CommonLEDs::CommonLEDs() {
-  FastLED.addLeds<LED_CHIPSET, LEDPIN, LED_COLOR_ORDER>(leds, NUM_LEDS).setCorrection(TypicalLEDStrip);
+  FastLED.addLeds<LED_CHIPSET, LEDPIN, LED_COLOR_ORDER>(leds, NUM_LEDS);
 }
 
 
 
-void CommonLEDs::_singleColor(float brightness) {
+void CommonLEDs::_singleColor() {
   for(int i=0; i<NUM_LEDS; i++) {
     leds[i].setRGB(
-      data["input_color"][0].as<int>() * brightness,
-      data["input_color"][1].as<int>() * brightness,
-      data["input_color"][2].as<int>() * brightness
+      _colorCorrection(data["input_color"][0].as<int>(), 0),
+      _colorCorrection(data["input_color"][1].as<int>(), 1),
+      _colorCorrection(data["input_color"][2].as<int>(), 2)
     );
   }
 }
 
 
-void CommonLEDs::_gradient(float brightness) {
+void CommonLEDs::_gradient() {
   _generateGradient();
 
   for(int i=0; i<NUM_LEDS; i++) {
     leds[i].setRGB(
-      _generatedGradient[i][0] * brightness,
-      _generatedGradient[i][1] * brightness,
-      _generatedGradient[i][2] * brightness
+      _colorCorrection(_generatedGradient[i][0], 0),
+      _colorCorrection(_generatedGradient[i][1], 1),
+      _colorCorrection(_generatedGradient[i][2], 2)
     );
   }
 }
 
 
-void CommonLEDs::_streamline(float brightness) {
+void CommonLEDs::_streamline() {
   int offset = data["offset"].as<int>();
   int currentLength = data["current_length"].as<int>();
-  for(int i=0; i<currentLength; i++) {
+  for(int i=0; i<currentLength; i++) {  
     leds[i + offset].setRGB(
-      data["led_list"][i][0].as<float>() * brightness,
-      data["led_list"][i][1].as<float>() * brightness,
-      data["led_list"][i][2].as<float>() * brightness
+      _colorCorrection(data["led_list"][i][0].as<int>(), 0),
+      _colorCorrection(data["led_list"][i][1].as<int>(), 1),
+      _colorCorrection(data["led_list"][i][2].as<int>(), 2)
     );
   }
 }
 
 
-void CommonLEDs::_random(float brightness) {
+void CommonLEDs::_random() {
   for(int i=0; i<NUM_LEDS; i++) {
     leds[i].setRGB(
-      random(32, 255) * brightness,
-      random(32, 255) * brightness,
-      random(32, 255) * brightness
+      _colorCorrection(random(32, 255), 0),
+      _colorCorrection(random(32, 255), 1),
+      _colorCorrection(random(32, 255), 2)
     );
   }
 }
 
-void CommonLEDs::_randomLeadColor(float brightness) {
+void CommonLEDs::_randomLeadColor() {
   for(int i=0; i<NUM_LEDS; i++) {
     leds[i].setRGB(
-      randomLead(data["input_color"][0].as<int>()) * brightness,
-      randomLead(data["input_color"][1].as<int>()) * brightness,
-      randomLead(data["input_color"][2].as<int>()) * brightness
+      _colorCorrection(randomLead(data["input_color"][0].as<int>()), 0),
+      _colorCorrection(randomLead(data["input_color"][1].as<int>()), 1),
+      _colorCorrection(randomLead(data["input_color"][2].as<int>()), 2)
     );
   }
 }
 
-void CommonLEDs::_randomLeadGradient(float brightness) {
+void CommonLEDs::_randomLeadGradient() {
   _generateGradient();
 
   for(int i=0; i<NUM_LEDS; i++) {
     leds[i].setRGB(
-      randomLead(_generatedGradient[i][0]) * brightness,
-      randomLead(_generatedGradient[i][1]) * brightness,
-      randomLead(_generatedGradient[i][2]) * brightness
+      _colorCorrection(randomLead(_generatedGradient[i][0]), 0),
+      _colorCorrection(randomLead(_generatedGradient[i][1]), 1),
+      _colorCorrection(randomLead(_generatedGradient[i][2]), 2)
     );
   }
 }
@@ -147,30 +178,29 @@ void CommonLEDs::display(char (&buffer)[BUFFERSIZE]) {
   }
 
   String mode = data["mode"].as<String>();
-  float brightness;
 
   if(data.containsKey("brightness")) {
-    brightness = data["brightness"].as<float>();
-    if (brightness > 1) {
-      brightness = 1;
+    _brightness = data["brightness"].as<float>();
+    if (_brightness > 1) {
+      _brightness = 1;
     }
   } else {
-    brightness = 1;
+    _brightness = 1;
   }
 
   if(mode == "single_color") {
-    _singleColor(brightness);
+    _singleColor();
   } else if(mode == "streamline") {
-    _streamline(brightness); 
+    _streamline(); 
   } else if(mode == "random") {
-    _random(brightness); 
+    _random(); 
   } else if(mode == "off") {
     _off(); 
   } else if(mode == "gradient") {
-    _gradient(brightness); 
+    _gradient(); 
   } else if(mode == "random_lead_color") {
-    _randomLeadColor(brightness); 
+    _randomLeadColor(); 
   } else if(mode == "random_lead_gradient") {
-    _randomLeadGradient(brightness); 
+    _randomLeadGradient(); 
   }
 }
